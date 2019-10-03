@@ -3,6 +3,7 @@ package ayyeka.assignment.ngnix_access_logs_parser.service;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
 import com.google.common.base.CaseFormat;
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -17,52 +18,78 @@ import java.util.stream.Collectors;
 @Service
 public class TokenParser {
 
-
-
-
-
     public NginxLogfileRow parseLogfileLine(String line, NginxLogfile logfile){
         NginxLogfileRow row = new NginxLogfileRow(logfile);
-        char[] chars = line.toCharArray();
-        StringBuilder currentTokenValue = new StringBuilder();
-        for (int lineIndex = 0, tokenIndex = 0; lineIndex < chars.length; lineIndex++) {
-            boolean isWhiteSpace = chars[lineIndex] == ' ';
-            boolean currentTokenValueInProgress = !currentTokenValue.toString().equals("");
-            //if we've definitively reached the end of a token
-            if(isWhiteSpace || lineIndex + 1 == chars.length){
-                if(currentTokenValueInProgress){
-                    //set the value and move on to the next token
-                    expectedTokens.get(tokenIndex).setFieldValue(row, currentTokenValue.toString());
-                    currentTokenValue = new StringBuilder();
+        try {
+            Stack<Character> squareBrackets = new Stack<>();
+            char[] chars = line.toCharArray();
+            StringBuilder currentTokenValue = new StringBuilder();
+            for (int lineIndex = 0, tokenIndex = 0; lineIndex < chars.length; lineIndex++) {
+                handleAnyBracketsOrQuotes(chars, lineIndex, squareBrackets);
+                if(isEndOfToken(chars, lineIndex, currentTokenValue, tokenIndex, squareBrackets)) {
+                    assignTokenValueIfNonStatic(tokenIndex, currentTokenValue, row);
                     tokenIndex++;
+                    currentTokenValue = new StringBuilder();
                 }
-            }//if we're still in the middle of a non-whitespace character continuum
-            //if the current value evaluates to a static expression
-            else if(matchesStaticExpression(tokenIndex, currentTokenValue.toString())){
-                //mark the expression as evaluated and move on
-                currentTokenValue = new StringBuilder();
-                tokenIndex++;
-            }//if the next character is not a legal character for a java variable declaration
-            //then we've reached the end of this token
-            else if(currentTokenValueInProgress && isNonAlphaNumericOrUnderscoreCharacter(chars[lineIndex + 1])){
-                //set the value and move on to the next token
-                expectedTokens.get(tokenIndex).setFieldValue(row, currentTokenValue.toString());
-                currentTokenValue = new StringBuilder();
-                tokenIndex++;
-            }else {
-                currentTokenValue.append(chars[lineIndex]);
+                if(isMeaningfulCharacter(chars, lineIndex, squareBrackets))
+                    currentTokenValue.append(chars[lineIndex]);
             }
+        }catch (Exception e){
+            System.out.println(line);
         }
         return row;
     }
 
-    private boolean isNonAlphaNumericOrUnderscoreCharacter(char aChar) {
-        return !Character.isLetter(aChar) && !Character.isDigit(aChar) && aChar != '_';
+    private boolean tokenWasStaticExpression(int tokenIndex) {
+        return expectedTokens.get(tokenIndex).getIsStaticExpression();
     }
 
-    private boolean matchesStaticExpression(int tokenIndex, String value) {
+    private boolean isMeaningfulCharacter(char[] chars, int lineIndex, Stack<Character> squareBrackets) {
+        return chars[lineIndex] != ' ' || isInBetweenBracketsOrQuotes(squareBrackets);
+    }
+
+    private boolean isInBetweenDoubleQuotes = false;
+    private void handleAnyBracketsOrQuotes(char[] chars, int lineIndex, Stack<Character> squareBrackets) {
+        final char c = chars[lineIndex];
+        if(c == '[') squareBrackets.push('[');
+        else if(c == '"') isInBetweenDoubleQuotes = !isInBetweenDoubleQuotes;
+        else if(c == ']') if(!squareBrackets.empty()) squareBrackets.pop();
+    }
+    private boolean isInBetweenBracketsOrQuotes(Stack<Character> brackets){
+        return !brackets.empty() || isInBetweenDoubleQuotes;
+    }
+
+
+
+    private boolean isEndOfToken(char[] chars, int lineIndex, StringBuilder currentTokenValue, int tokenIndex, Stack<Character> squareBrackets) {
+        final boolean currentTokenValueInProgress = !currentTokenValue.toString().equals("");
+        if(lineIndex + 1 == chars.length)
+            return true;
+        else if(chars[lineIndex] == ' ' && !isInBetweenBracketsOrQuotes(squareBrackets))
+            return currentTokenValueInProgress;
+        else if(isClosingBracketOrDoubleQuote(chars[lineIndex], squareBrackets))
+            return true;
+        else return matchesStaticExpression(tokenIndex, currentTokenValue);
+    }
+
+
+
+    private boolean isClosingBracketOrDoubleQuote(char c, Stack<Character> squareBrackets) {
+        return (c == ']' && squareBrackets.empty())
+                ||
+                String.valueOf(c).equals("\"") && !isInBetweenDoubleQuotes;
+    }
+
+    private void assignTokenValueIfNonStatic(int tokenIndex, StringBuilder currentTokenValue, NginxLogfileRow row) {
+        String value = currentTokenValue.toString();
+        final Token expectedToken = expectedTokens.get(tokenIndex);
+        if(!expectedToken.getIsStaticExpression())
+            expectedToken.setFieldValue(row, value);
+    }
+
+    private boolean matchesStaticExpression(int tokenIndex, StringBuilder value) {
         return expectedTokens.get(tokenIndex).getIsStaticExpression() &&
-               expectedTokens.get(tokenIndex).getStaticExpression().equals(value);
+               expectedTokens.get(tokenIndex).getStaticExpression().equals(value.toString());
     }
     private Token parseRawToken(String currentTokenTemplate){
         Token token = new Token();

@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Service
 public class NginxLogfileQueueManager {
@@ -28,6 +30,7 @@ public class NginxLogfileQueueManager {
         for (File logFile : logFiles) {
             enqueueLogfile("nginx_logs/" + logFile.getName());
         }
+        processQueue();
     }
 
     @Autowired
@@ -39,10 +42,14 @@ public class NginxLogfileQueueManager {
         logfileKeys.add(key);
     }
 
-    @Scheduled(fixedDelay = 30000)//30 seconds
+    //@Scheduled(fixedDelay = 30000)//30 seconds
     public void processQueue(){
+        //Executor executor = Executors.newCachedThreadPool();
         while (!logfileKeys.isEmpty()){
-            logfileParser.parseLogfile(logfileKeys.remove());
+            //executor.execute(() -> {
+                final String key = logfileKeys.remove();
+                logfileParser.parseLogfile(key);
+            //});
         }
     }
 }

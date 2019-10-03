@@ -14,6 +14,8 @@ public class Token {
     @NonNull
     private Boolean isStaticExpression;
     private String staticExpression;
+    private String staticPrefix;
+    private String staticPostfix;
     private Method dynamicVariableFieldSetter;
     public void setFieldValue(NginxLogfileRow instance, String value) {
         try {
