@@ -1,0 +1,20 @@
+version: '2'
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: logsdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+
+  #web:
+  #  build: .
+  #  image: "nginx-logs-parser-server:latest"
+  #  ports:
+  #   - "8080:8080"
+  #  depends_on:
+  #    - db
+  #  command: ["java", "-jar", "application.jar"]
