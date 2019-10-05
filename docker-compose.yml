@@ -3,7 +3,7 @@ services:
   db:
     image: mysql:5.7
     volumes:
-      - ./db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+      - ./init.sql:/data/application/init.sql
     networks:
       - db-link
     expose:
@@ -15,6 +15,8 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
+    command: --init-file /data/application/init.sql
+
 
   web:
     build: .

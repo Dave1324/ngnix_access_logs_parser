@@ -10,7 +10,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+/*
+* Allows for the rest of the application to
+* not care about where and how the actual files come from.
+* this is loading them from the classpath but could easily
+* be modified for s3, etc.
+* */
 @Service
 public class LogfileResolver {
     @Autowired

@@ -16,6 +16,8 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * Parses an nginx file and saves its data into the database.
@@ -29,44 +31,38 @@ public class NginxLogfileParser {
      * and then parses & persists each line into a corresponding 'NginxLogfileRow'
      *
      * @param key*/
-    @Transactional
-    public void parseLogfile(String key) {
+    private void parseLogfile(String key) {
         System.out.println(key + "...");
         String line;
         BufferedReader br = logfileResolver.resolveFor(key);
         NginxLogfile nginxLogfile = new NginxLogfile(key);
-        db.insertLogfile(nginxLogfile);
+        Long logFileId = db.insertLogfile(nginxLogfile);
+        nginxLogfile.setId(logFileId);
         try{
             while ((line = br.readLine()) != null) {
-                //final NginxLogfileRow row = tokenParser.parseLogfileLine(line, nginxLogfile);
-                //db.insertRequest(row.getRequest());
-                //db.insertRow(row);
+                Map<String, String> parsedTokenMap = detokenizer.parse(line);
+                final NginxLogfileRow row = NginxLogfileRow.fromMap(parsedTokenMap, nginxLogfile);
+                db.insertRequest(row.getRequest());
+                db.insertRow(row);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+    private Executor executor = Executors.newSingleThreadExecutor();
+    public void enqueueLogfile(String key){
+        executor.execute(() -> parseLogfile(key));
+    }
+
     @Autowired
     private DataBaseApiInterface db;
     @Autowired
     private LogfileResolver logfileResolver;
-    @Autowired
-    private ResourceLoader resourceLoader;
-    private BufferedReader getBufferedReaderFor(String rsc) {
-        try {
-            Resource resource = resourceLoader.getResource("classpath:" + rsc);
-            InputStream inputStream = resource.getInputStream();
-            return new BufferedReader(new InputStreamReader(inputStream));
-        } catch(Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-    }
     @Value("${log-format}")
     private String logFormat;
     private Detokenizer detokenizer;
     @PostConstruct
     private void initDetokenizer(){
-
+        detokenizer = Detokenizer.of(logFormat);
     }
 }

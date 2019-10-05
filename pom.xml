@@ -64,10 +64,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <version>6.0.0</version>
+        </dependency>
+        <!--<dependency>
             <groupId>org.sindaryn</groupId>
             <artifactId>dtokenize</artifactId>
             <version>0.0.1</version>
-        </dependency>
+        </dependency>-->
     </dependencies>
 
     <build>
@@ -85,5 +90,4 @@
 
         <finalName>smart-logs-api</finalName>
     </build>
-
 </project>

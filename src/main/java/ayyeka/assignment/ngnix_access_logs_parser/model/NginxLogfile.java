@@ -2,10 +2,7 @@ package ayyeka.assignment.ngnix_access_logs_parser.model;
 
 import lombok.*;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @RequiredArgsConstructor
 public class NginxLogfile {
-    @Id @NonNull
+    @Id
+    private Long id;
+    @NonNull
     private String name;
     private LocalDateTime createdAt = LocalDateTime.now();
-    @Version
-    private Long version;
 }

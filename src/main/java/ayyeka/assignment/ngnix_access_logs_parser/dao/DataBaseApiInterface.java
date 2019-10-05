@@ -3,11 +3,15 @@ package ayyeka.assignment.ngnix_access_logs_parser.dao;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
 import ayyeka.assignment.ngnix_access_logs_parser.model.Request;
+import lombok.val;
+import lombok.var;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
+import java.math.BigInteger;
+import java.util.List;
 
 @Repository
 @Transactional
@@ -17,41 +21,42 @@ public class DataBaseApiInterface {
     private EntityManager entityManager;
 
 
-    public void insertLogfile(NginxLogfile nginxLogfile) {
+    public Long insertLogfile(NginxLogfile nginxLogfile) {
         String insertStatement = "INSERT INTO nginx_logfile " +
                                     "(name," +
-                                    "created_at," +
-                                    "version)" +
-                                    "VALUES(?,?,?)";
-        entityManager.createNativeQuery(insertStatement)
+                                    "created_at)" +
+                                    "VALUES(?,?)";
+        var query = entityManager.createNativeQuery(insertStatement)
                 .setParameter(1, nginxLogfile.getName())
-                .setParameter(2, nginxLogfile.getCreatedAt())
-                .setParameter(3, 0)
-                .executeUpdate();
+                .setParameter(2, nginxLogfile.getCreatedAt());
+        query.executeUpdate();
+        return getInsertedId();
     }
 
-    public void insertRequest(Request request) {
+    private long getInsertedId() {
+        return ((BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).longValue();
+    }
+
+    public Long insertRequest(Request request) {
         String insertStatement = "INSERT INTO request" +
-                                    "(id," +
-                                    "request_method," +
+                                    "(request_method," +
                                     "request_uri," +
-                                    "server_protocol," +
-                                    "version)" +
-                                    "VALUES(?,?,?,?,?)";
-        entityManager
+                                    "request_uri_query_string," +
+                                    "server_protocol)" +
+                                    "VALUES(?,?,?,?)";
+        var query = entityManager
                 .createNativeQuery(insertStatement)
-                .setParameter(1, request.getId())
-                .setParameter(2, request.getRequest_method())
-                .setParameter(3, request.getRequest_uri())
-                .setParameter(4, request.getServer_protocol())
-                .setParameter(5, 0)//version
-                .executeUpdate();
+                .setParameter(1, request.getRequest_method())
+                .setParameter(2, request.getRequest_uri())
+                .setParameter(3, request.getRequest_uri_query_string())
+                .setParameter(4, request.getServer_protocol());
+        query.executeUpdate();
+        return getInsertedId();
     }
 
-    public void insertRow(NginxLogfileRow row) {
+    public Long insertRow(NginxLogfileRow row) {
         String insertStatement = "INSERT INTO nginx_logfile_row" +
-                                    "(id," +
-                                    "body_bytes_sent," +
+                                    "(body_bytes_sent," +
                                     "http_referer," +
                                     "http_x_forwarded_for," +
                                     "remote_addr," +
@@ -62,27 +67,35 @@ public class DataBaseApiInterface {
                                     "unknown," +
                                     "upstream_time," +
                                     "user_agent," +
-                                    "version," +
-                                    "owning_logfile_name," +
+                                    "owning_logfile_id," +
                                     "request_id)" +
-                                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-        entityManager
+                                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+        var query = entityManager
                 .createNativeQuery(insertStatement)
-                .setParameter(1, row.getId())
-                .setParameter(2, row.getBody_bytes_sent())
-                .setParameter(3, row.getHttp_referer())
-                .setParameter(4, row.getHttp_x_forwarded_for())
-                .setParameter(5, row.getRemote_addr())
-                .setParameter(6, row.getRemote_user())
-                .setParameter(7, row.getResponse_time())
-                .setParameter(8, row.getStatus())
-                .setParameter(9, row.getTime_local())
-                .setParameter(10, row.getUnknown())
-                .setParameter(11, row.getUpstream_time())
-                .setParameter(12, row.getUser_agent())
-                .setParameter(13, 0)//version
-                .setParameter(14, row.getOwningLogfile().getName())
-                .setParameter(15, row.getRequest().getId())
-                .executeUpdate();
+                .setParameter(1, row.getBody_bytes_sent())
+                .setParameter(2, row.getHttp_referer())
+                .setParameter(3, row.getHttp_x_forwarded_for())
+                .setParameter(4, row.getRemote_addr())
+                .setParameter(5, row.getRemote_user())
+                .setParameter(6, row.getResponse_time())
+                .setParameter(7, row.getStatus())
+                .setParameter(8, row.getTime_local())
+                .setParameter(9, row.getUnknown())
+                .setParameter(10, row.getUpstream_time())
+                .setParameter(11, row.getUser_agent())
+                .setParameter(12, row.getOwningLogfile().getId())
+                .setParameter(13, row.getRequest().getId());
+        query.executeUpdate();
+        return getInsertedId();
+    }
+
+    public List getTop5RequestedUrls(){
+        return entityManager
+                .createNativeQuery(
+                        "SELECT request_uri, COUNT(*) AS magnitude " +
+                                "FROM request " +
+                                "GROUP BY request_uri " +
+                                "ORDER BY magnitude DESC " +
+                                "LIMIT 5").getResultList();
     }
 }

@@ -5,15 +5,14 @@ import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
 import javax.persistence.*;
+import java.util.Map;
 
 @Data
-@NoArgsConstructor
-@RequiredArgsConstructor
 @Entity
 public class NginxLogfileRow {
     @Id
-    private Long id = IdFactory.getNextId();
-    @ManyToOne @NonNull
+    private Long id;
+    @ManyToOne
     private NginxLogfile owningLogfile;
     private String remote_addr;
     private String remote_user;
@@ -30,15 +29,27 @@ public class NginxLogfileRow {
     private String upstream_time;
     private String response_time;
 
-    public void setRequest(String requestString) {
+    private void setRequest(String requestString) {
         String[] values = requestString.split("\\s+");
         this.request = new Request(values[0], values[1], values[2]);
     }
 
-    public void setBody_bytes_sent(String body_bytes_sent) {
-        this.body_bytes_sent = Long.valueOf(body_bytes_sent);
+    private NginxLogfileRow(){}
+    public static NginxLogfileRow fromMap(Map<String, String> map, NginxLogfile owningLogfile){
+        NginxLogfileRow instance = new NginxLogfileRow();
+        instance.owningLogfile = owningLogfile;
+        instance.remote_addr = map.get("remote_addr");
+        instance.remote_user = map.get("remote_user");
+        instance.time_local = map.get("time_local");
+        instance.setRequest(map.get("request"));
+        instance.status = map.get("status");
+        instance.body_bytes_sent = Long.valueOf(map.get("body_bytes_sent"));
+        instance.http_referer = map.get("http_referer");
+        instance.unknown = map.get("unknown");
+        instance.user_agent = map.get("user_agent");
+        instance.http_x_forwarded_for = map.get("http_x_forwarded_for");
+        instance.upstream_time = map.get("upstream_time");
+        instance.response_time = map.get("response_time");
+        return instance;
     }
-
-    @Version
-    private Long version;
 }
