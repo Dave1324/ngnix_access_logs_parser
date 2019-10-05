@@ -1,6 +1,5 @@
 package ayyeka.assignment.ngnix_access_logs_parser.model;
 
-import ayyeka.assignment.ngnix_access_logs_parser.utils.IdFactory;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;

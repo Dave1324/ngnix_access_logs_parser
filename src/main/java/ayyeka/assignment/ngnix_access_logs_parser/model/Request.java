@@ -1,6 +1,5 @@
 package ayyeka.assignment.ngnix_access_logs_parser.model;
 
-import ayyeka.assignment.ngnix_access_logs_parser.utils.IdFactory;
 import lombok.*;
 
 import javax.persistence.*;

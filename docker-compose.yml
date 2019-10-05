@@ -1,7 +1,13 @@
-version: '2'
+version: '3'
 services:
   db:
     image: mysql:5.7
+    volumes:
+      - ./db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+    networks:
+      - db-link
+    expose:
+      - "3306"
     ports:
       - "3306:3306"
     environment:
@@ -10,11 +16,18 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
 
-  #web:
-  #  build: .
-  #  image: "nginx-logs-parser-server:latest"
-  #  ports:
-  #   - "8080:8080"
-  #  depends_on:
-  #    - db
-  #  command: ["java", "-jar", "application.jar"]
+  web:
+    build: .
+    image: "smart-logs-api:latest"
+    networks:
+      - db-link
+    ports:
+     - "8080:8080"
+    links:
+      - db
+    depends_on:
+      - db
+    command: ["java", "-jar", "./target/smart-logs-api.jar"]
+
+networks:
+  db-link:

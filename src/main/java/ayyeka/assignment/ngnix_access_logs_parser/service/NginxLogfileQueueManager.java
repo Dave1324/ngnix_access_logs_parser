@@ -1,6 +1,7 @@
 package ayyeka.assignment.ngnix_access_logs_parser.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,35 +22,20 @@ public class NginxLogfileQueueManager {
     private ResourceLoader resourceLoader;
     @PostConstruct
     private void enqueueClasspathLogfiles(){
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
-        URL url = loader.getResource("nginx_logs");
-        assert url != null;
-        String path = url.getPath();
-        File[] logFiles = new File(path).listFiles();
+        final ClassPathResource classPathResource =
+                new ClassPathResource("target/classes/nginx_logs");
+        File[] logFiles = new File(classPathResource.getPath()).listFiles();
         assert logFiles != null;
+        assert logFiles.length > 0;
         for (File logFile : logFiles) {
             enqueueLogfile("nginx_logs/" + logFile.getName());
         }
-        processQueue();
     }
 
     @Autowired
     private NginxLogfileParser logfileParser;
-
-    private Queue<String> logfileKeys = new LinkedList<>();
-
+    private Executor executor = Executors.newSingleThreadExecutor();
     public void enqueueLogfile(String key){
-        logfileKeys.add(key);
-    }
-
-    //@Scheduled(fixedDelay = 30000)//30 seconds
-    public void processQueue(){
-        //Executor executor = Executors.newCachedThreadPool();
-        while (!logfileKeys.isEmpty()){
-            //executor.execute(() -> {
-                final String key = logfileKeys.remove();
-                logfileParser.parseLogfile(key);
-            //});
-        }
+        executor.execute(() -> logfileParser.parseLogfile(key));
     }
 }

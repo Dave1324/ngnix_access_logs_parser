@@ -40,10 +40,6 @@ public class TokenParser {
         return row;
     }
 
-    private boolean tokenWasStaticExpression(int tokenIndex) {
-        return expectedTokens.get(tokenIndex).getIsStaticExpression();
-    }
-
     private boolean isMeaningfulCharacter(char[] chars, int lineIndex, Stack<Character> squareBrackets) {
         return chars[lineIndex] != ' ' || isInBetweenBracketsOrQuotes(squareBrackets);
     }

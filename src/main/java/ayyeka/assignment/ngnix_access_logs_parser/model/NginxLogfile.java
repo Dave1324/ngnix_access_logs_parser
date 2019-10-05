@@ -18,8 +18,6 @@ public class NginxLogfile {
     @Id @NonNull
     private String name;
     private LocalDateTime createdAt = LocalDateTime.now();
-    @OneToMany(mappedBy = "owningLogfile") @NonNull
-    private List<NginxLogfileRow> rows;
     @Version
     private Long version;
 }

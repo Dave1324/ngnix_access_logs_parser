@@ -1,4 +1,4 @@
-package ayyeka.assignment.ngnix_access_logs_parser.utils;
+package ayyeka.assignment.ngnix_access_logs_parser.model;
 
 import java.net.NetworkInterface;
 import java.security.SecureRandom;
