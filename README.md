@@ -19,8 +19,8 @@ Smart logs API utilizes a standard 3 tier architectural approach. There are 4 pa
 	- `Token`: Represents a single expression in the collective token stream that makes up a line within a log file.
 
 5. `dto`: The objects that are actually returned from the API endpoints
-	- `Top5Tuple`: {url, hits}
-	- `RangeTuple`: {url, dateTime, hits}
+	- `Top5Tuple`: The return type of the `/top5` endpoint; {url, hits}
+	- `RangeTuple`: The return type of the `/rate` endpoint; {url, dateTime, hits}
 
 In addition to the above, you'll find the `init.sql` in the root directory. You do not need to execute it, as docker-compose will 
 launch and initialize the database automatically.
