@@ -1,8 +1,6 @@
 package ayyeka.assignment.ngnix_access_logs_parser.service;
 
 import ayyeka.assignment.ngnix_access_logs_parser.dao.DataBaseApiInterface;
-import ayyeka.assignment.ngnix_access_logs_parser.dao.NginxLogfileDao;
-import ayyeka.assignment.ngnix_access_logs_parser.dao.NginxLogfileRowDao;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
 import lombok.val;

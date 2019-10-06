@@ -19,14 +19,6 @@ import java.util.List;
 @Transactional
 public class DataBaseApiInterface {
 
-    @Autowired
-    private NginxLogfileDao logfileDao;
-    @Autowired
-    private NginxLogfileRowDao rowDao;
-    @Autowired
-    private RequestDao requestDao;
-
-
     public Long insertLogfile(NginxLogfile nginxLogfile) {
         String insertStatement = "INSERT INTO nginx_logfile " +
                                     "(name," +
