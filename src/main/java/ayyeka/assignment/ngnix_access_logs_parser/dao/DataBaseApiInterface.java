@@ -5,6 +5,8 @@ import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
 import ayyeka.assignment.ngnix_access_logs_parser.model.Request;
 import lombok.val;
 import lombok.var;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -13,12 +15,16 @@ import javax.transaction.Transactional;
 import java.math.BigInteger;
 import java.util.List;
 
-@Repository
+@Component
 @Transactional
 public class DataBaseApiInterface {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    @Autowired
+    private NginxLogfileDao logfileDao;
+    @Autowired
+    private NginxLogfileRowDao rowDao;
+    @Autowired
+    private RequestDao requestDao;
 
 
     public Long insertLogfile(NginxLogfile nginxLogfile) {
@@ -31,6 +37,7 @@ public class DataBaseApiInterface {
                 .setParameter(2, nginxLogfile.getCreatedAt());
         query.executeUpdate();
         return getInsertedId();
+        //return logfileDao.save(nginxLogfile).getId();
     }
 
     private long getInsertedId() {
@@ -52,6 +59,7 @@ public class DataBaseApiInterface {
                 .setParameter(4, request.getServer_protocol());
         query.executeUpdate();
         return getInsertedId();
+        //return requestDao.save(request).getId();
     }
 
     public Long insertRow(NginxLogfileRow row) {
@@ -87,8 +95,11 @@ public class DataBaseApiInterface {
                 .setParameter(13, row.getRequest().getId());
         query.executeUpdate();
         return getInsertedId();
+        //return rowDao.save(row).getId();
     }
 
+    @PersistenceContext
+    private EntityManager entityManager;
     public List getTop5RequestedUrls(){
         return entityManager
                 .createNativeQuery(

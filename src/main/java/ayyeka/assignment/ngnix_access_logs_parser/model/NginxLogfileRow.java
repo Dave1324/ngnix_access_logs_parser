@@ -11,6 +11,7 @@ import java.util.Map;
 @Entity
 public class NginxLogfileRow {
     @Id
+    @GeneratedValue
     private Long id;
     @ManyToOne
     private NginxLogfile owningLogfile;

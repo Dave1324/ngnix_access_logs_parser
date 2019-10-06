@@ -2,6 +2,7 @@ package ayyeka.assignment.ngnix_access_logs_parser.service;
 
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class LogfileResolver {
     @Autowired
     private ResourceLoader resourceLoader;
     public BufferedReader resolveFor(String key){
-        Resource resource = resourceLoader.getResource("classpath:" + key);
+        ClassPathResource resource = new ClassPathResource(key);
         InputStream inputStream = null;
         try {
             inputStream = resource.getInputStream();

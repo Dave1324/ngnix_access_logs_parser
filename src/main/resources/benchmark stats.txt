@@ -1,0 +1,13 @@
+
+On single thread:
+
+Avg lines per given nginx logfile: ~32,368
+Avg time per file: ~52 seconds
+Avg records per second: ~622
+
+On multiple threads:
+
+No improvement in my environment.
+This could be an optimization for
+environments more suited to parallel processing.
+Optimistic locking would also be required.

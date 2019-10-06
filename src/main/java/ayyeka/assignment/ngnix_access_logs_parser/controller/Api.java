@@ -2,13 +2,18 @@ package ayyeka.assignment.ngnix_access_logs_parser.controller;
 
 import ayyeka.assignment.ngnix_access_logs_parser.dao.DataBaseApiInterface;
 import ayyeka.assignment.ngnix_access_logs_parser.service.NginxLogfileParser;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @RestController
 public class Api {
@@ -30,11 +35,14 @@ public class Api {
     */
     @Autowired
     private NginxLogfileParser logfileParser;
+    private Executor executor = Executors.newFixedThreadPool(2);
     //@PostMapping("/enqueue-log-files")
     // - Since our 'LogfileResolver' bean is not currently set up for such a scenario, this is here for show only.
     public void enqueueLogFiles(@RequestParam("keys") String[] keys){
-        for(String key : keys) logfileParser.enqueueLogfile(key);
+        for(String key : keys)
+            executor.execute(() -> logfileParser.parseLogfile(key));
     }
+
 
     /*
     * This is what we're using in our little demo with
@@ -47,7 +55,10 @@ public class Api {
         File[] logFiles = new File(classPathResource.getPath()).listFiles();
         assert logFiles != null;
         assert logFiles.length > 0;
-        for (File logFile : logFiles)
-            logfileParser.enqueueLogfile("nginx_logs/" + logFile.getName());
+        String[] names = new String[logFiles.length];
+        for (int i = 0; i < logFiles.length; i++) {
+            names[i] = "nginx_logs/" + logFiles[i].getName();
+        }
+        enqueueLogFiles(names);
     }
 }

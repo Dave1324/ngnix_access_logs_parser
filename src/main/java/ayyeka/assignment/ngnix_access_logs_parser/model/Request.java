@@ -9,6 +9,7 @@ import javax.persistence.*;
 @Entity
 public class Request {
     @Id
+    @GeneratedValue
     private Long id;
     @NonNull
     private String request_method;
