@@ -11,13 +11,16 @@ Smart logs API utilizes a standard 3 tier architectural approach. There are 4 pa
 3. `model`: Business entities
 	- `NginxLogfile`: Represents a single log file
 	- `NginxLogfileRow`: Represents a single line within such a file
-	- `Request`: Represents the `$request` token in nginx logging.
 
 4. `service`: Most of the business logic goes here
 	- `Detokenizer`: Is the core of this system; takes in a single log file line, and outputs a map of the detokenized content.
 	- `LogfileResolver`: Log files are stored in the cloud. Log file resolver takes in a "key" or uri, and fetches it. In this demo example it's just fetching a few static files from the target classpath, but the rest of the application doesn't know or care.
 	- `NginxLogfileParser`: Parses an nginx log file and saves its data into the database.
 	- `Token`: Represents a single expression in the collective token stream that makes up a line within a log file.
+
+5. `dto`: The objects that are actually returned from the API endpoints
+	- `Top5Tuple`: {url, hits}
+	- `RangeTuple`: {url, dateTime, hits}
 
 In addition to the above, you'll find the `init.sql` in the root directory. You do not need to execute it, as docker-compose will 
 launch and initialize the database automatically.
