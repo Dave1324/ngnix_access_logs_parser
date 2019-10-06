@@ -1,9 +1,7 @@
-package ayyeka.assignment.ngnix_access_logs_parser.service;
+package ayyeka.assignment.ngnix_access_logs_parser.parser;
 
-import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 

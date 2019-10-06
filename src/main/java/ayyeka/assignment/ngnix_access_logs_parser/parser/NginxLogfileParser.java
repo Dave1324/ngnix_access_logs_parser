@@ -1,4 +1,4 @@
-package ayyeka.assignment.ngnix_access_logs_parser.service;
+package ayyeka.assignment.ngnix_access_logs_parser.parser;
 
 import ayyeka.assignment.ngnix_access_logs_parser.dao.DataBaseApiInterface;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
@@ -8,19 +8,13 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.io.BufferedReader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 /**
  * Parses an nginx file and saves its data into the database.
@@ -46,7 +40,6 @@ public class NginxLogfileParser {
             while ((line = br.readLine()) != null) {
                 Map<String, String> mappedResult = detokenizer.parse(line);
                 val row = new NginxLogfileRow(mappedResult, nginxLogfile);
-                db.insertRequest(row.getRequest());
                 db.insertRow(row);
             }
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-package ayyeka.assignment.ngnix_access_logs_parser.service;
+package ayyeka.assignment.ngnix_access_logs_parser.parser;
 
 
 import java.util.*;

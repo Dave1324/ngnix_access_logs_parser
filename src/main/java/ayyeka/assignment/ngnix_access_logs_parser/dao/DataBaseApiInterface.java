@@ -2,7 +2,6 @@ package ayyeka.assignment.ngnix_access_logs_parser.dao;
 
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
-import ayyeka.assignment.ngnix_access_logs_parser.model.Request;
 import lombok.val;
 import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +12,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.transaction.Transactional;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Component
@@ -21,37 +23,16 @@ public class DataBaseApiInterface {
 
     public Long insertLogfile(NginxLogfile nginxLogfile) {
         String insertStatement = "INSERT INTO nginx_logfile " +
-                                    "(name," +
-                                    "created_at)" +
-                                    "VALUES(?,?)";
+                                    "(name)" +
+                                    "VALUES(?)";
         var query = entityManager.createNativeQuery(insertStatement)
-                .setParameter(1, nginxLogfile.getName())
-                .setParameter(2, nginxLogfile.getCreatedAt());
+                .setParameter(1, nginxLogfile.getName());
         query.executeUpdate();
         return getInsertedId();
-        //return logfileDao.save(nginxLogfile).getId();
     }
 
     private long getInsertedId() {
         return ((BigInteger) entityManager.createNativeQuery("SELECT LAST_INSERT_ID()").getSingleResult()).longValue();
-    }
-
-    public Long insertRequest(Request request) {
-        String insertStatement = "INSERT INTO request" +
-                                    "(request_method," +
-                                    "request_uri," +
-                                    "request_uri_query_string," +
-                                    "server_protocol)" +
-                                    "VALUES(?,?,?,?)";
-        var query = entityManager
-                .createNativeQuery(insertStatement)
-                .setParameter(1, request.getRequest_method())
-                .setParameter(2, request.getRequest_uri())
-                .setParameter(3, request.getRequest_uri_query_string())
-                .setParameter(4, request.getServer_protocol());
-        query.executeUpdate();
-        return getInsertedId();
-        //return requestDao.save(request).getId();
     }
 
     public Long insertRow(NginxLogfileRow row) {
@@ -68,8 +49,11 @@ public class DataBaseApiInterface {
                                     "upstream_time," +
                                     "user_agent," +
                                     "owning_logfile_id," +
-                                    "request_id)" +
-                                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                                    "request_method," +
+                                    "request_uri," +
+                                    "request_uri_query_string," +
+                                    "request_server_protocol)" +
+                                    "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
         var query = entityManager
                 .createNativeQuery(insertStatement)
                 .setParameter(1, row.getBody_bytes_sent())
@@ -84,10 +68,12 @@ public class DataBaseApiInterface {
                 .setParameter(10, row.getUpstream_time())
                 .setParameter(11, row.getUser_agent())
                 .setParameter(12, row.getOwningLogfile().getId())
-                .setParameter(13, row.getRequest().getId());
+                .setParameter(13, row.getRequest_method())
+                .setParameter(14, row.getRequest_uri())
+                .setParameter(15, row.getRequest_uri_query_string())
+                .setParameter(16, row.getRequest_server_protocol());
         query.executeUpdate();
         return getInsertedId();
-        //return rowDao.save(row).getId();
     }
 
     @PersistenceContext
@@ -96,9 +82,33 @@ public class DataBaseApiInterface {
         return entityManager
                 .createNativeQuery(
                         "SELECT request_uri, COUNT(*) AS magnitude " +
-                                "FROM request " +
+                                "FROM  nginx_logfile_row " +
                                 "GROUP BY request_uri " +
                                 "ORDER BY magnitude DESC " +
                                 "LIMIT 5").getResultList();
     }
+
+    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy HH");
+    public List getRange(String from){
+        return entityManager
+                .createNativeQuery(
+                        "SELECT " +
+                                "count(*), `request_uri`, " +
+                                "YEAR(`time_local`), " +
+                                "MONTH(`time_local`), " +
+                                "DAY(`time_local`), " +
+                                "HOUR(`time_local`)" +
+
+                                "FROM `nginx_logfile_row`" +
+                                "WHERE `time_local` < '" + LocalDateTime.parse(from, formatter) + ":00:00'" +
+                                "GROUP BY " +
+                                "`request_uri`, " +
+                                "YEAR(`time_local`), " +
+                                "MONTH(`time_local`), " +
+                                "DAY(`time_local`), " +
+                                "HOUR(`time_local`);")
+                .getResultList();
+    }
+
+
 }

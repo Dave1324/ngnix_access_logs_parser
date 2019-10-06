@@ -17,5 +17,4 @@ public class NginxLogfile {
     private Long id;
     @NonNull
     private String name;
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -1,26 +1,39 @@
 package ayyeka.assignment.ngnix_access_logs_parser.controller;
 
 import ayyeka.assignment.ngnix_access_logs_parser.dao.DataBaseApiInterface;
-import ayyeka.assignment.ngnix_access_logs_parser.service.NginxLogfileParser;
-import lombok.val;
+import ayyeka.assignment.ngnix_access_logs_parser.dto.RangeTuple;
+import ayyeka.assignment.ngnix_access_logs_parser.dto.Top5Tuple;
+import ayyeka.assignment.ngnix_access_logs_parser.parser.NginxLogfileParser;
+import lombok.var;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
-import java.util.Arrays;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @RestController
+@SuppressWarnings("unchecked")
 public class Api {
 
     @GetMapping("/top5")
-    public List top5Urls(){
-        return db.getTop5RequestedUrls();
+    public List<Top5Tuple> top5Urls(){
+        return Top5Tuple.top5Tuples(db.getTop5RequestedUrls());
+    }
+
+
+    private final static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MMM-yyyy HH");
+    @GetMapping("/rate")
+    public List<RangeTuple> rate(@RequestParam(value = "fromDate", required = false) String fromDate){
+        if(fromDate == null) fromDate = formatter.format(LocalDateTime.now().minusHours(1));
+        fromDate = fromDate.replaceAll("\"", "");
+        return RangeTuple.mapRangeTuples(db.getRange(fromDate));
     }
 
     @Autowired
