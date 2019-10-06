@@ -35,7 +35,7 @@ public class Api {
     */
     @Autowired
     private NginxLogfileParser logfileParser;
-    private Executor executor = Executors.newFixedThreadPool(2);
+    private Executor executor = Executors.newFixedThreadPool(1);
     //@PostMapping("/enqueue-log-files")
     // - Since our 'LogfileResolver' bean is not currently set up for such a scenario, this is here for show only.
     public void enqueueLogFiles(@RequestParam("keys") String[] keys){
