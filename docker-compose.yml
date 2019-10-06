@@ -18,18 +18,18 @@ services:
     command: --init-file /data/application/init.sql
 
 
-  web:
-    build: .
-    image: "smart-logs-api:latest"
-    networks:
-      - db-link
-    ports:
-     - "8080:8080"
-    links:
-      - db
-    depends_on:
-      - db
-    command: ["java", "-jar", "./target/smart-logs-api.jar"]
+  #web:
+  #  build: .
+  #  image: "smart-logs-api:latest"
+  #  networks:
+  #    - db-link
+  #  ports:
+  #   - "8080:8080"
+  #  links:
+  #    - db
+  #  depends_on:
+  #    - db
+  #  command: ["java", "-jar", "./target/smart-logs-api.jar"]
 
 networks:
   db-link:

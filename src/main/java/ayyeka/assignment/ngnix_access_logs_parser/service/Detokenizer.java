@@ -7,8 +7,6 @@ import java.util.regex.Pattern;
 
 public class Detokenizer {
 
-    private Detokenizer(){}
-
     public Map<String, String> parse(String tokenStream) {//throws TokenStreamTemplateMismatchException {
         Map<String, String> mappedResults = new HashMap<>();
         Stack<Character> squareBrackets = new Stack<>();
@@ -74,7 +72,7 @@ public class Detokenizer {
         return expectedTokens.get(tokenIndex).getIsStaticExpression() &&
                 expectedTokens.get(tokenIndex).getExpression().equals(value.toString());
     }
-    private static Token parseRawToken(String currentTokenTemplate){
+    private Token parseRawToken(String currentTokenTemplate){
         Token token = new Token();
         token.setIsStaticExpression(determineTokenType(currentTokenTemplate));
         currentTokenTemplate = currentTokenTemplate.substring(1);//strip '$' / '^' prefix
@@ -82,18 +80,16 @@ public class Detokenizer {
         return token;
     }
 
-    public static Detokenizer of(String template){
-        Detokenizer instance = new Detokenizer();
+    public Detokenizer(String template){
         char[] charArray = template.toCharArray();
         for (int i = 0; i < charArray.length; i++) {
             char c = charArray[i];
             if(c == '$' || c == '^')
-                instance.expectedTokens.add(parseRawToken(template.substring(i, endOfToken(i, template))));
+                expectedTokens.add(parseRawToken(template.substring(i, endOfToken(i, template))));
         }
-        return instance;
     }
 
-    private static int endOfToken(int i, String logFormat) {
+    private int endOfToken(int i, String logFormat) {
         Pattern p = Pattern.compile("[\\s+$^]");
         Matcher m = p.matcher(logFormat.substring(i + 1));
         if (m.find())
@@ -101,7 +97,7 @@ public class Detokenizer {
         return logFormat.length();
     }
     private List<Token> expectedTokens = new ArrayList<>();
-    private static boolean determineTokenType(String s) {
+    private boolean determineTokenType(String s) {
         if(s.startsWith("$")) return false;
         if(s.startsWith("^")) return true;
         throw new IllegalArgumentException("Invalid log-file format: " + s);

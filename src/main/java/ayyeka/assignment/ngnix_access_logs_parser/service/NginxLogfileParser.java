@@ -3,19 +3,17 @@ package ayyeka.assignment.ngnix_access_logs_parser.service;
 import ayyeka.assignment.ngnix_access_logs_parser.dao.DataBaseApiInterface;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfile;
 import ayyeka.assignment.ngnix_access_logs_parser.model.NginxLogfileRow;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
-
-import javax.annotation.PostConstruct;
-import javax.transaction.Transactional;
 import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -25,6 +23,8 @@ import java.util.concurrent.Executors;
 
 @Service
 public class NginxLogfileParser {
+
+
     /**
      * opens up the logfile corresponding to 'key',
      * creates and saves a new instance of 'NginxLogfile',
@@ -32,18 +32,28 @@ public class NginxLogfileParser {
      *
      * @param key*/
     private void parseLogfile(String key) {
-        System.out.println(key + "...");
         String line;
         BufferedReader br = logfileResolver.resolveFor(key);
         NginxLogfile nginxLogfile = new NginxLogfile(key);
         Long logFileId = db.insertLogfile(nginxLogfile);
         nginxLogfile.setId(logFileId);
+        int lines = 0;
+        Detokenizer detokenizer = new Detokenizer(logFormat);
+        LocalDateTime start = LocalDateTime.now();
         try{
             while ((line = br.readLine()) != null) {
                 Map<String, String> parsedTokenMap = detokenizer.parse(line);
-                final NginxLogfileRow row = NginxLogfileRow.fromMap(parsedTokenMap, nginxLogfile);
+                final NginxLogfileRow row = new NginxLogfileRow(parsedTokenMap, nginxLogfile);
                 db.insertRequest(row.getRequest());
                 db.insertRow(row);
+                lines++;
+                if(lines > 1000){
+                    long seconds = start.until(LocalDateTime.now(), ChronoUnit.SECONDS);
+                    System.out.println(
+                            lines + " lines in " + seconds + " seconds");
+                    start = LocalDateTime.now();
+                    lines = 0;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -51,7 +61,11 @@ public class NginxLogfileParser {
     }
     private Executor executor = Executors.newSingleThreadExecutor();
     public void enqueueLogfile(String key){
-        executor.execute(() -> parseLogfile(key));
+        executor.execute(() -> {
+            printTime("starting", key);
+            parseLogfile(key);
+            printTime("ending", key);
+        });
     }
 
     @Autowired
@@ -60,9 +74,13 @@ public class NginxLogfileParser {
     private LogfileResolver logfileResolver;
     @Value("${log-format}")
     private String logFormat;
-    private Detokenizer detokenizer;
-    @PostConstruct
-    private void initDetokenizer(){
-        detokenizer = Detokenizer.of(logFormat);
+
+    private final static Logger logger = Logger.getLogger(NginxLogfileParser.class);
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private void printTime(String prefix, String key){
+        LocalDateTime now = LocalDateTime.now();
+        String formatDateTime = now.format(formatter);
+        /*logger.log(Level.DEBUG, */System.out.println(prefix + " : " + key + " @ " + formatDateTime);
     }
+
 }

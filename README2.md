@@ -1,0 +1,2 @@
+##Adapting the system for scale
+Overall the current configuration is suitable. There's what what to play with in terms of parallel processing, but basically the API takes in one or more "keys", which it then pushes into a Java threadpool queue, which the proceeds to fetch all the relevant files and parse them into the database.

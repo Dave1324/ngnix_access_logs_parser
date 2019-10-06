@@ -15,6 +15,9 @@ public class Token {
     @NonNull
     private Boolean isStaticExpression;
     private String expression;
+    public void setExpression(String expression){
+        this.expression = expression;
+    }
     public void setMappedValue(Map<String, String> resultsMap, String value){
         resultsMap.put(expression, value);
     }
